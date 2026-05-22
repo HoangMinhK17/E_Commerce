@@ -1,6 +1,10 @@
 import React from 'react';
 import { formatPrice } from './Shared';
+import { Button, Card, InputNumber, Table, Tag, Typography, Divider, Alert, Space, Result } from 'antd';
+import { DeleteOutlined, ShoppingOutlined, ArrowLeftOutlined, LockOutlined } from '@ant-design/icons';
 import '../style/Cart.css';
+
+const { Title, Text } = Typography;
 
 const CartPage = ({ cart, onUpdateCart, onNavigate }) => {
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -20,128 +24,204 @@ const CartPage = ({ cart, onUpdateCart, onNavigate }) => {
   if (cart.length === 0) {
     return (
       <div className="cart-empty-wrap page-enter">
-        <div className="cart-empty">
-          <div className="cart-empty-icon">🛒</div>
-          <h2>Giỏ Hàng Trống</h2>
-          <p>Bạn chưa có sản phẩm nào trong giỏ hàng.</p>
-          <button className="btn-primary" onClick={() => onNavigate('products')}>
-            Tiếp Tục Mua Sắm
-          </button>
-        </div>
+        <Result
+          icon={<span style={{ fontSize: '4rem' }}>🛒</span>}
+          title={<span style={{ fontFamily: "'Playfair Display', serif", color: 'var(--text-primary)' }}>Giỏ Hàng Trống</span>}
+          subTitle="Bạn chưa có sản phẩm nào trong giỏ hàng."
+          extra={
+            <Button
+              type="primary"
+              size="large"
+              icon={<ShoppingOutlined />}
+              onClick={() => onNavigate('products')}
+              className="cart-btn-primary"
+            >
+              Tiếp Tục Mua Sắm
+            </Button>
+          }
+        />
       </div>
     );
   }
+
+  const columns = [
+    {
+      title: 'Sản Phẩm',
+      dataIndex: 'name',
+      key: 'product',
+      render: (_, item) => (
+        <div className="cart-item-product">
+          <div className="cart-item-img">
+            <img src={item.image} alt={item.name} />
+          </div>
+          <div className="cart-item-info">
+            <div className="cart-item-name">{item.name}</div>
+            <div className="cart-item-tags">
+              {item.tags && item.tags.map(t => (
+                <Tag key={t} color="green" style={{ borderRadius: 12, fontSize: '0.72rem' }}>{t}</Tag>
+              ))}
+            </div>
+            <Button
+              type="link"
+              danger
+              size="small"
+              icon={<DeleteOutlined />}
+              onClick={() => removeItem(item.id)}
+              className="cart-item-remove-btn"
+            >
+              Xóa
+            </Button>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: 'Số Lượng',
+      dataIndex: 'quantity',
+      key: 'quantity',
+      width: 130,
+      align: 'center',
+      render: (qty, item) => (
+        <InputNumber
+          min={1}
+          value={qty}
+          onChange={(val) => updateQty(item.id, val)}
+          size="middle"
+          className="cart-qty-input"
+        />
+      ),
+    },
+    {
+      title: 'Đơn Giá',
+      dataIndex: 'price',
+      key: 'price',
+      width: 140,
+      align: 'right',
+      render: (price) => (
+        <Text className="cart-unit-price">{formatPrice(price)}</Text>
+      ),
+    },
+    {
+      title: 'Thành Tiền',
+      key: 'lineTotal',
+      width: 160,
+      align: 'right',
+      render: (_, item) => (
+        <Text strong style={{ color: 'var(--text-primary)', fontSize: '0.95rem' }}>
+          {formatPrice(item.price * item.quantity)}
+        </Text>
+      ),
+    },
+  ];
 
   return (
     <div className="cart-page page-enter">
       <div className="container">
         <div className="cart-header">
-          <h1 className="cart-title">Giỏ Hàng Của Bạn</h1>
-          <p className="cart-sub">Xem lại các lựa chọn từ vườn cây gia đình chúng tôi.</p>
+          <Title level={2} style={{ marginBottom: 4, color: 'var(--text-primary)' }}>
+            Giỏ Hàng Của Bạn
+          </Title>
+          <Text type="secondary">Xem lại các lựa chọn từ vườn cây gia đình chúng tôi.</Text>
         </div>
 
         <div className="cart-layout">
-          {/* ITEMS */}
-          <div className="cart-items">
-            {/* TABLE HEADER */}
-            <div className="cart-table-head">
-              <span>Sản Phẩm</span>
-              <span>Số Lượng</span>
-              <span>Đơn Giá</span>
-              <span>Thành Tiền</span>
-            </div>
-
-            {cart.map(item => (
-              <div key={item.id} className="cart-item">
-                <div className="cart-item-product">
-                  <div className="cart-item-img">
-                    <img src={item.image} alt={item.name} />
-                  </div>
-                  <div className="cart-item-info">
-                    <div className="cart-item-name">{item.name}</div>
-                    <div className="cart-item-meta">
-                      {item.tags.map(t => (
-                        <span key={t} className="cart-item-tag">{t}</span>
-                      ))}
-                    </div>
-                    <button
-                      className="cart-item-remove"
-                      onClick={() => removeItem(item.id)}
-                    >
-                      Xóa
-                    </button>
-                  </div>
-                </div>
-
-                <div className="qty-control">
-                  <button className="qty-btn" onClick={() => updateQty(item.id, item.quantity - 1)}>−</button>
-                  <span className="qty-num">{item.quantity}</span>
-                  <button className="qty-btn" onClick={() => updateQty(item.id, item.quantity + 1)}>+</button>
-                </div>
-
-                <div className="cart-item-price">{formatPrice(item.price)}</div>
-                <div className="cart-item-total" style={{fontWeight:700, color:'var(--text-primary)'}}>
-                  {formatPrice(item.price * item.quantity)}
-                </div>
-              </div>
-            ))}
+          {/* CART ITEMS */}
+          <div className="cart-items-section">
+            <Table
+              dataSource={cart}
+              columns={columns}
+              rowKey="id"
+              pagination={false}
+              className="cart-table"
+              size="middle"
+            />
 
             <div className="cart-actions">
-              <button className="cart-continue" onClick={() => onNavigate('products')}>
-                ← Tiếp Tục Mua Sắm
-              </button>
-              <button
-                className="btn-outline"
+              <Button
+                type="link"
+                icon={<ArrowLeftOutlined />}
+                onClick={() => onNavigate('products')}
+                className="cart-continue-btn"
+              >
+                Tiếp Tục Mua Sắm
+              </Button>
+              <Button
                 onClick={() => onUpdateCart([...cart])}
+                className="cart-update-btn"
               >
                 Cập Nhật Giỏ Hàng
-              </button>
+              </Button>
             </div>
           </div>
 
           {/* SUMMARY */}
-          <div className="cart-summary">
-            <h2 className="cart-summary-title">Tổng Đơn Hàng</h2>
-
-            <div className="cart-summary-rows">
-              <div className="cart-summary-row">
-                <span>Tạm tính ({cart.reduce((s,i) => s+i.quantity, 0)} sản phẩm)</span>
-                <span>{formatPrice(subtotal)}</span>
+          <div className="cart-summary-wrap">
+            <Card className="cart-summary-card" title={
+              <span className="cart-summary-title">Tổng Đơn Hàng</span>
+            }>
+              <div className="cart-summary-rows">
+                <div className="cart-summary-row">
+                  <Text type="secondary">
+                    Tạm tính ({cart.reduce((s, i) => s + i.quantity, 0)} sản phẩm)
+                  </Text>
+                  <Text>{formatPrice(subtotal)}</Text>
+                </div>
+                <div className="cart-summary-row">
+                  <Text type="secondary">Phí Vận Chuyển</Text>
+                  {shipping === 0 ? (
+                    <Tag color="success" style={{ margin: 0, fontWeight: 600 }}>Miễn Phí</Tag>
+                  ) : (
+                    <Text>{formatPrice(shipping)}</Text>
+                  )}
+                </div>
+                <div className="cart-summary-row">
+                  <Text type="secondary">Thuế Ước Tính (8%)</Text>
+                  <Text>{formatPrice(tax)}</Text>
+                </div>
               </div>
-              <div className="cart-summary-row">
-                <span>Phí Vận Chuyển</span>
-                <span style={{color: shipping === 0 ? '#3d6b2c' : undefined, fontWeight: 600}}>
-                  {shipping === 0 ? 'Miễn Phí' : formatPrice(shipping)}
-                </span>
+
+              <Divider style={{ margin: '16px 0' }} />
+
+              <div className="cart-summary-total-row">
+                <Text strong style={{ fontSize: '1rem' }}>Tổng Cộng</Text>
+                <span className="cart-total-amount">{formatPrice(total)}</span>
               </div>
-              <div className="cart-summary-row">
-                <span>Thuế Ước Tính (8%)</span>
-                <span>{formatPrice(tax)}</span>
-              </div>
-            </div>
 
-            <div className="cart-summary-total">
-              <span>Tổng Cộng</span>
-              <span className="cart-total-amount">{formatPrice(total)}</span>
-            </div>
+              <Button
+                type="primary"
+                size="large"
+                block
+                icon={<LockOutlined />}
+                onClick={() => onNavigate('checkout')}
+                className="cart-checkout-btn"
+              >
+                Tiến Hành Thanh Toán
+              </Button>
 
-            <button
-              className="btn-primary cart-checkout-btn"
-              onClick={() => onNavigate('checkout')}
-            >
-              🔒 Tiến Hành Thanh Toán
-            </button>
+              {shipping > 0 && (
+                <Alert
+                  type="warning"
+                  showIcon
+                  style={{ marginBottom: 12 }}
+                  message={
+                    <span>
+                      Mua thêm <strong>{formatPrice(500000 - subtotal)}</strong> để được miễn phí vận chuyển!
+                    </span>
+                  }
+                />
+              )}
 
-            {shipping > 0 && (
-              <div className="cart-free-shipping-hint">
-                💡 Mua thêm <strong>{formatPrice(500000 - subtotal)}</strong> để được miễn phí vận chuyển!
-              </div>
-            )}
-
-            <div className="cart-eco-note">
-              <span className="cart-eco-icon">🌱</span>
-              <p>Đơn hàng của bạn hỗ trợ cam kết của chúng tôi về nông nghiệp tái tạo và vận chuyển trung hòa carbon.</p>
-            </div>
+              <Alert
+                type="success"
+                showIcon
+                message={
+                  <span style={{ fontSize: '0.82rem' }}>
+                    🌱 Đơn hàng của bạn hỗ trợ cam kết của chúng tôi về nông nghiệp tái tạo và vận chuyển trung hòa carbon.
+                  </span>
+                }
+                className="cart-eco-alert"
+              />
+            </Card>
           </div>
         </div>
       </div>

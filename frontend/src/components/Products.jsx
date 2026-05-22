@@ -1,7 +1,26 @@
 import React, { useState, useMemo } from 'react';
-import { products, categories } from '../data/products';
-import { ProductCard, Stars, formatPrice } from './Shared';
+import {
+  Card, Radio, Slider, Rate, Tag, Select, Pagination,
+  Empty, Button, Row, Col, Typography, Divider, Space,
+} from 'antd';
+import { FilterOutlined, DeleteOutlined } from '@ant-design/icons';
+import { products } from '../data/products';
+import { ProductCard, formatPrice } from './Shared';
 import '../style/Products.css';
+
+const { Title, Paragraph, Text } = Typography;
+const { CheckableTag } = Tag;
+
+const CATEGORIES = ['Tất Cả Sản Phẩm', 'Trái Cây Sấy', 'Hỗn Hợp Hạt', 'Hạt Rang'];
+const DIET_TAGS = ['Hữu Cơ', 'Thuần Chay', 'Không Đường'];
+const PAGE_SIZE = 9;
+
+const SORT_OPTIONS = [
+  { value: 'featured', label: 'Nổi Bật' },
+  { value: 'price-asc', label: 'Giá Thấp → Cao' },
+  { value: 'price-desc', label: 'Giá Cao → Thấp' },
+  { value: 'rating', label: 'Đánh Giá Cao' },
+];
 
 const ProductsPage = ({ onNavigate, onAddToCart, initialCategory }) => {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory || 'Tất Cả Sản Phẩm');
@@ -11,12 +30,20 @@ const ProductsPage = ({ onNavigate, onAddToCart, initialCategory }) => {
   const [sortBy, setSortBy] = useState('featured');
   const [currentPage, setCurrentPage] = useState(1);
 
-  const allTags = ['Hữu Cơ', 'Thuần Chay', 'Không Đường'];
-
-  const toggleTag = (tag) => {
+  const toggleTag = (tag, checked) => {
     setSelectedTags(prev =>
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+      checked ? [...prev, tag] : prev.filter(t => t !== tag)
     );
+    setCurrentPage(1);
+  };
+
+  const resetFilters = () => {
+    setSelectedCategory('Tất Cả Sản Phẩm');
+    setPriceMax(300000);
+    setMinRating(0);
+    setSelectedTags([]);
+    setSortBy('featured');
+    setCurrentPage(1);
   };
 
   const filtered = useMemo(() => {
@@ -29,153 +56,231 @@ const ProductsPage = ({ onNavigate, onAddToCart, initialCategory }) => {
     if (selectedTags.length > 0) {
       list = list.filter(p => selectedTags.some(t => p.tags.includes(t)));
     }
-    if (sortBy === 'price-asc') list.sort((a,b) => a.price - b.price);
-    else if (sortBy === 'price-desc') list.sort((a,b) => b.price - a.price);
-    else if (sortBy === 'rating') list.sort((a,b) => b.rating - a.rating);
+    if (sortBy === 'price-asc') list.sort((a, b) => a.price - b.price);
+    else if (sortBy === 'price-desc') list.sort((a, b) => b.price - a.price);
+    else if (sortBy === 'rating') list.sort((a, b) => b.rating - a.rating);
     return list;
   }, [selectedCategory, priceMax, minRating, selectedTags, sortBy]);
 
-  const CATS_UI = ['Tất Cả Sản Phẩm', 'Trái Cây Sấy', 'Hỗn Hợp Hạt', 'Hạt Rang'];
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, currentPage]);
 
   return (
     <div className="products-page page-enter">
-      <div className="products-hero">
+      {/* ========== HERO BANNER ========== */}
+      <section className="products-hero">
         <div className="container">
-          <h1 className="products-hero-title">Bộ Sưu Tập Của Chúng Tôi</h1>
-          <p className="products-hero-sub">
+          <Title
+            level={1}
+            className="products-hero-title"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              color: 'var(--text-primary)',
+              marginBottom: 12,
+            }}
+          >
+            Bộ Sưu Tập Của Chúng Tôi
+          </Title>
+          <Paragraph
+            className="products-hero-sub"
+            style={{
+              color: 'var(--text-secondary)',
+              maxWidth: 580,
+              margin: '0 auto',
+              lineHeight: 1.8,
+              fontSize: '1rem',
+            }}
+          >
             Khám phá tuyển chọn tinh tế những trái cây sấy và hỗn hợp hạt thủ công,
             tìm nguồn trực tiếp từ các vườn cây truyền thống và lò rang quy mô nhỏ.
-          </p>
+          </Paragraph>
         </div>
-      </div>
+      </section>
 
+      {/* ========== LAYOUT ========== */}
       <div className="container products-layout">
-        {/* SIDEBAR */}
+        {/* ---- SIDEBAR ---- */}
         <aside className="products-sidebar">
-          <div className="sidebar-section">
-            <div className="sidebar-label">Danh Mục</div>
-            {CATS_UI.map(cat => (
-              <label key={cat} className="sidebar-check">
-                <input
-                  type="radio"
-                  name="category"
-                  checked={selectedCategory === cat}
-                  onChange={() => { setSelectedCategory(cat); setCurrentPage(1); }}
-                />
-                <span>{cat}</span>
-              </label>
-            ))}
-          </div>
-
-          <div className="sidebar-section">
-            <div className="sidebar-label">Khoảng Giá</div>
-            <input
-              type="range"
-              min={50000}
-              max={300000}
-              step={10000}
-              value={priceMax}
-              onChange={e => setPriceMax(Number(e.target.value))}
-              className="price-slider"
-            />
-            <div className="price-range-labels">
-              <span>50.000đ</span>
-              <span style={{color:'var(--orange-primary)', fontWeight:600}}>
-                {formatPrice(priceMax)}
-              </span>
-            </div>
-          </div>
-
-          <div className="sidebar-section">
-            <div className="sidebar-label">Đánh Giá</div>
-            {[4, 3].map(r => (
-              <label key={r} className="sidebar-check">
-                <input
-                  type="radio"
-                  name="rating"
-                  checked={minRating === r}
-                  onChange={() => setMinRating(minRating === r ? 0 : r)}
-                />
-                <div className="sidebar-stars">
-                  {[1,2,3,4,5].map(i => (
-                    <span key={i} style={{color: i <= r ? '#f59e0b' : '#ddd', fontSize:'0.9rem'}}>★</span>
+          <Card
+            className="sidebar-card"
+            styles={{ body: { padding: 24 } }}
+          >
+            {/* Category Filter */}
+            <div className="sidebar-section">
+              <Text className="sidebar-label" strong>
+                <FilterOutlined style={{ marginRight: 6 }} />
+                Danh Mục
+              </Text>
+              <Radio.Group
+                value={selectedCategory}
+                onChange={e => {
+                  setSelectedCategory(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="sidebar-radio-group"
+              >
+                <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                  {CATEGORIES.map(cat => (
+                    <Radio key={cat} value={cat} className="sidebar-radio-item">
+                      {cat}
+                    </Radio>
                   ))}
-                  <span style={{fontSize:'0.8rem', color:'var(--text-muted)', marginLeft:4}}>
-                    &amp; lên
-                  </span>
-                </div>
-              </label>
-            ))}
-          </div>
-
-          <div className="sidebar-section">
-            <div className="sidebar-label">Chế Độ Ăn</div>
-            <div className="tag-filters">
-              {allTags.map(tag => (
-                <button
-                  key={tag}
-                  className={`tag-filter-btn ${selectedTags.includes(tag) ? 'active' : ''}`}
-                  onClick={() => toggleTag(tag)}
-                >
-                  {tag}
-                </button>
-              ))}
+                </Space>
+              </Radio.Group>
             </div>
-          </div>
+
+            <Divider className="sidebar-divider" />
+
+            {/* Price Filter */}
+            <div className="sidebar-section">
+              <Text className="sidebar-label" strong>Khoảng Giá</Text>
+              <Slider
+                min={50000}
+                max={300000}
+                step={10000}
+                value={priceMax}
+                onChange={val => {
+                  setPriceMax(val);
+                  setCurrentPage(1);
+                }}
+                tooltip={{ formatter: val => formatPrice(val) }}
+                className="price-slider"
+              />
+              <div className="price-range-labels">
+                <Text type="secondary" style={{ fontSize: '0.8rem' }}>
+                  {formatPrice(50000)}
+                </Text>
+                <Text strong style={{ fontSize: '0.85rem', color: 'var(--orange-primary)' }}>
+                  {formatPrice(priceMax)}
+                </Text>
+              </div>
+            </div>
+
+            <Divider className="sidebar-divider" />
+
+            {/* Rating Filter */}
+            <div className="sidebar-section">
+              <Text className="sidebar-label" strong>Đánh Giá</Text>
+              <Radio.Group
+                value={minRating}
+                onChange={e => {
+                  setMinRating(e.target.value === minRating ? 0 : e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="sidebar-radio-group"
+              >
+                <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                  {[4, 3].map(r => (
+                    <Radio
+                      key={r}
+                      value={r}
+                      className="sidebar-radio-item"
+                      onClick={() => { if (minRating === r) setMinRating(0); }}
+                    >
+                      <span className="sidebar-rating-option">
+                        <Rate disabled defaultValue={r} style={{ fontSize: 14 }} />
+                        <Text type="secondary" style={{ fontSize: '0.78rem', marginLeft: 4 }}>
+                          &amp; lên
+                        </Text>
+                      </span>
+                    </Radio>
+                  ))}
+                </Space>
+              </Radio.Group>
+            </div>
+
+            <Divider className="sidebar-divider" />
+
+            {/* Diet Tags Filter */}
+            <div className="sidebar-section sidebar-section-last">
+              <Text className="sidebar-label" strong>Chế Độ Ăn</Text>
+              <div className="tag-filters">
+                {DIET_TAGS.map(tag => (
+                  <CheckableTag
+                    key={tag}
+                    checked={selectedTags.includes(tag)}
+                    onChange={checked => toggleTag(tag, checked)}
+                    className="diet-tag"
+                  >
+                    {tag}
+                  </CheckableTag>
+                ))}
+              </div>
+            </div>
+          </Card>
         </aside>
 
-        {/* MAIN */}
+        {/* ---- MAIN CONTENT ---- */}
         <main className="products-main">
+          {/* Toolbar */}
           <div className="products-toolbar">
-            <span className="products-count">
-              Hiển thị <strong>{filtered.length}</strong> sản phẩm tinh tuyển
-            </span>
-            <div className="sort-wrap">
-              <label>Sắp xếp:</label>
-              <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="sort-select">
-                <option value="featured">Nổi Bật Trước</option>
-                <option value="price-asc">Giá: Thấp → Cao</option>
-                <option value="price-desc">Giá: Cao → Thấp</option>
-                <option value="rating">Đánh Giá Cao Nhất</option>
-              </select>
-            </div>
+            <Text className="products-count" style={{ color: 'var(--text-secondary)' }}>
+              Hiển thị <Text strong style={{ color: 'var(--orange-primary)' }}>{filtered.length}</Text> sản phẩm tinh tuyển
+            </Text>
+            <Select
+              value={sortBy}
+              onChange={val => setSortBy(val)}
+              options={SORT_OPTIONS}
+              className="sort-select"
+              style={{ width: 180 }}
+              variant="outlined"
+            />
           </div>
 
+          {/* Product Grid or Empty State */}
           {filtered.length === 0 ? (
-            <div className="no-products">
-              <span>🍃</span>
-              <p>Không tìm thấy sản phẩm phù hợp.</p>
-              <button className="btn-outline" onClick={() => {
-                setSelectedCategory('Tất Cả Sản Phẩm');
-                setPriceMax(300000);
-                setMinRating(0);
-                setSelectedTags([]);
-              }}>Xóa Bộ Lọc</button>
+            <div className="products-empty-wrap">
+              <Empty
+                description={
+                  <span style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
+                    Không tìm thấy sản phẩm phù hợp với bộ lọc hiện tại.
+                  </span>
+                }
+              >
+                <Button
+                  type="primary"
+                  icon={<DeleteOutlined />}
+                  onClick={resetFilters}
+                  className="reset-filters-btn"
+                  size="large"
+                >
+                  Xóa Bộ Lọc
+                </Button>
+              </Empty>
             </div>
           ) : (
-            <div className="products-grid-3col">
-              {filtered.map(p => (
-                <ProductCard key={p.id} product={p} onNavigate={onNavigate} onAddToCart={onAddToCart} />
-              ))}
-            </div>
-          )}
+            <>
+              <Row gutter={[20, 20]}>
+                {paginatedProducts.map(p => (
+                  <Col key={p.id} xs={24} sm={12} lg={8}>
+                    <ProductCard
+                      product={p}
+                      onNavigate={onNavigate}
+                      onAddToCart={onAddToCart}
+                    />
+                  </Col>
+                ))}
+              </Row>
 
-          {/* PAGINATION */}
-          <div className="pagination">
-            <button className="page-btn">‹</button>
-            {[1,2,3].map(p => (
-              <button
-                key={p}
-                className={`page-btn ${currentPage === p ? 'active' : ''}`}
-                onClick={() => setCurrentPage(p)}
-              >
-                {p}
-              </button>
-            ))}
-            <span className="page-ellipsis">...</span>
-            <button className="page-btn">12</button>
-            <button className="page-btn">›</button>
-          </div>
+              {/* Pagination */}
+              {filtered.length > PAGE_SIZE && (
+                <div className="products-pagination">
+                  <Pagination
+                    current={currentPage}
+                    total={filtered.length}
+                    pageSize={PAGE_SIZE}
+                    onChange={page => {
+                      setCurrentPage(page);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    showSizeChanger={false}
+                  />
+                </div>
+              )}
+            </>
+          )}
         </main>
       </div>
     </div>

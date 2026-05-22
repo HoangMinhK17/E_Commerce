@@ -1,51 +1,107 @@
 import React, { useState } from 'react';
 import { products } from '../data/products';
-import { Stars, ProductCard, formatPrice } from './Shared';
+import { ProductCard, formatPrice } from './Shared';
+import {
+  Breadcrumb,
+  Button,
+  Card,
+  Col,
+  Collapse,
+  Image,
+  InputNumber,
+  Rate,
+  Row,
+  Space,
+  Tag,
+  Typography,
+  message,
+  Divider,
+} from 'antd';
+import {
+  CheckCircleOutlined,
+  ShoppingCartOutlined,
+  ThunderboltOutlined,
+  SafetyOutlined,
+  CarOutlined,
+  HomeOutlined,
+} from '@ant-design/icons';
 import '../style/ProductDetail.css';
 
-const CheckIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3d6b2c" strokeWidth="2.5">
-    <circle cx="12" cy="12" r="10" fill="#f0fdf4" stroke="#3d6b2c" strokeWidth="1.5"/>
-    <polyline points="9 12 11 14 15 10"/>
-  </svg>
-);
+const { Title, Paragraph, Text } = Typography;
 
 const ProductDetailPage = ({ product, onNavigate, onAddToCart }) => {
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
-  const [nutritionOpen, setNutritionOpen] = useState(true);
-  const [addedMsg, setAddedMsg] = useState(false);
 
   const related = products.filter(p => p.id !== product.id).slice(0, 4);
 
   const handleAddToCart = () => {
     onAddToCart(product, qty);
-    setAddedMsg(true);
-    setTimeout(() => setAddedMsg(false), 2000);
+    message.success('Đã thêm vào giỏ hàng!');
   };
+
+  const handleBuyNow = () => {
+    onAddToCart(product, qty);
+    onNavigate('checkout');
+  };
+
+  const nutritionItems = [
+    { label: 'Calories', value: product.nutritionFacts.calories },
+    { label: 'Chất Xơ', value: product.nutritionFacts.dietaryFiber },
+    { label: 'Kali', value: product.nutritionFacts.potassium },
+    { label: 'Khẩu Phần', value: product.nutritionFacts.servingSize },
+  ];
 
   return (
     <div className="product-detail-page page-enter">
       {/* BREADCRUMB */}
       <div className="detail-breadcrumb">
         <div className="container">
-          <span onClick={() => onNavigate('home')} className="breadcrumb-link">Trang Chủ</span>
-          <span className="breadcrumb-sep">›</span>
-          <span onClick={() => onNavigate('products', product.category)} className="breadcrumb-link">
-            {product.category}
-          </span>
-          <span className="breadcrumb-sep">›</span>
-          <span className="breadcrumb-current">{product.name}</span>
+          <Breadcrumb
+            items={[
+              {
+                title: (
+                  <span className="breadcrumb-link" onClick={() => onNavigate('home')}>
+                    <HomeOutlined style={{ marginRight: 4 }} />
+                    Trang Chủ
+                  </span>
+                ),
+              },
+              {
+                title: (
+                  <span
+                    className="breadcrumb-link"
+                    onClick={() => onNavigate('products', product.category)}
+                  >
+                    {product.category}
+                  </span>
+                ),
+              },
+              {
+                title: <span className="breadcrumb-current">{product.name}</span>,
+              },
+            ]}
+          />
         </div>
       </div>
 
       {/* MAIN PRODUCT SECTION */}
       <div className="container detail-main">
-        {/* IMAGES */}
+        {/* LEFT: IMAGE GALLERY */}
         <div className="detail-images">
-          <div className="detail-img-main">
-            <img src={product.images[activeImg]} alt={product.name} />
-          </div>
+          <Image.PreviewGroup items={product.images}>
+            <div className="detail-img-main">
+              <Image
+                src={product.images[activeImg]}
+                alt={product.name}
+                width="100%"
+                height="100%"
+                style={{ objectFit: 'cover' }}
+                preview={{ mask: 'Xem ảnh lớn' }}
+              />
+            </div>
+          </Image.PreviewGroup>
+
           <div className="detail-img-thumbs">
             {product.images.map((img, i) => (
               <div
@@ -53,125 +109,239 @@ const ProductDetailPage = ({ product, onNavigate, onAddToCart }) => {
                 className={`detail-img-thumb ${activeImg === i ? 'active' : ''}`}
                 onClick={() => setActiveImg(i)}
               >
-                <img src={img} alt={`${product.name} ${i+1}`} />
+                <img src={img} alt={`${product.name} ${i + 1}`} />
               </div>
             ))}
           </div>
         </div>
 
-        {/* INFO */}
+        {/* RIGHT: PRODUCT INFO */}
         <div className="detail-info">
-          <div className="detail-badges">
+          {/* Badges */}
+          <Space size={8} wrap>
             {product.badge && (
-              <span className="detail-badge" style={{background: product.badgeColor || '#b45309'}}>
+              <Tag
+                color={product.badgeColor || '#b45309'}
+                style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.05em',
+                  border: 'none',
+                  padding: '4px 12px',
+                }}
+              >
                 {product.badge}
-              </span>
+              </Tag>
             )}
             {product.tags.map(tag => (
-              <span key={tag} className="detail-badge detail-badge-outline">{tag}</span>
+              <Tag
+                key={tag}
+                style={{
+                  background: 'transparent',
+                  border: '1.5px solid var(--border-mid)',
+                  color: 'var(--text-secondary)',
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  padding: '3px 10px',
+                }}
+              >
+                {tag}
+              </Tag>
             ))}
-          </div>
+          </Space>
 
-          <h1 className="detail-title">{product.name}</h1>
+          {/* Title */}
+          <Title
+            level={2}
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              color: 'var(--text-primary)',
+              margin: 0,
+              lineHeight: 1.2,
+            }}
+          >
+            {product.name}
+          </Title>
 
+          {/* Price */}
           <div className="detail-price-row">
             <span className="detail-price">{formatPrice(product.price)}</span>
             {product.originalPrice && (
-              <span className="detail-orig-price">{formatPrice(product.originalPrice)}</span>
+              <Text delete type="secondary" style={{ fontSize: '1.1rem' }}>
+                {formatPrice(product.originalPrice)}
+              </Text>
             )}
           </div>
 
-          <div className="detail-rating-row">
-            <Stars rating={product.rating} />
-            <span className="detail-rating-count">({product.reviewCount} đánh giá)</span>
-          </div>
+          {/* Rating */}
+          <Space size={10} align="center">
+            <Rate
+              disabled
+              allowHalf
+              defaultValue={product.rating}
+              style={{ fontSize: 16, color: '#f59e0b' }}
+            />
+            <Text type="secondary" style={{ fontSize: '0.85rem' }}>
+              ({product.reviewCount} đánh giá)
+            </Text>
+          </Space>
 
-          <p className="detail-description">{product.description}</p>
+          {/* Description */}
+          <Paragraph
+            style={{
+              fontSize: '0.93rem',
+              color: 'var(--text-secondary)',
+              lineHeight: 1.8,
+              margin: 0,
+            }}
+          >
+            {product.description}
+          </Paragraph>
 
+          {/* Features */}
           <ul className="detail-features">
             {product.features.map((f, i) => (
               <li key={i} className="detail-feature">
-                <CheckIcon />
+                <CheckCircleOutlined
+                  style={{ color: 'var(--green-accent)', fontSize: 16 }}
+                />
                 <span>{f}</span>
               </li>
             ))}
           </ul>
 
-          {/* QTY + ADD TO CART */}
-          <div className="detail-purchase">
+          {/* Purchase Card */}
+          <Card
+            className="detail-purchase-card"
+            styles={{
+              body: {
+                padding: 24,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16,
+              },
+            }}
+          >
+            {/* Quantity */}
             <div className="detail-qty-wrap">
-              <label className="detail-qty-label">Chọn Số Lượng</label>
-              <div className="qty-control">
-                <button className="qty-btn" onClick={() => setQty(Math.max(1, qty-1))}>−</button>
-                <span className="qty-num">{qty}</span>
-                <button className="qty-btn" onClick={() => setQty(qty+1)}>+</button>
-              </div>
+              <Text strong style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                Chọn Số Lượng
+              </Text>
+              <InputNumber
+                min={1}
+                value={qty}
+                onChange={val => setQty(val || 1)}
+                style={{ width: 100 }}
+                size="middle"
+              />
             </div>
-            <div className="detail-actions">
-              <button
-                className="btn-primary detail-add-btn"
-                onClick={handleAddToCart}
-                style={{background: addedMsg ? '#3d6b2c' : undefined}}
-              >
-                {addedMsg ? '✓ Đã Thêm!' : 'Thêm Vào Giỏ'}
-              </button>
-              <button className="btn-outline detail-buy-btn" onClick={() => { onAddToCart(product, qty); onNavigate('checkout'); }}>
-                Mua Ngay
-              </button>
-            </div>
-            <div className="detail-trust-row">
-              <span className="detail-trust-item">🚚 Miễn phí vận chuyển &gt;500k</span>
-              <span className="detail-trust-item">🔒 Thanh Toán An Toàn</span>
-            </div>
-          </div>
 
-          {/* NUTRITIONAL FACTS */}
-          <div className="detail-accordion">
-            <button
-              className="accordion-header"
-              onClick={() => setNutritionOpen(!nutritionOpen)}
+            {/* Action Buttons */}
+            <Button
+              type="primary"
+              icon={<ShoppingCartOutlined />}
+              size="large"
+              block
+              className="detail-add-btn"
+              onClick={handleAddToCart}
             >
-              <span>Thông Tin Dinh Dưỡng</span>
-              <span className="accordion-icon">{nutritionOpen ? '▴' : '▾'}</span>
-            </button>
-            {nutritionOpen && (
-              <div className="accordion-body">
-                <div className="nutrition-grid">
-                  <div className="nutrition-item">
-                    <span className="nutrition-label">Calories</span>
-                    <span className="nutrition-value">{product.nutritionFacts.calories}</span>
+              Thêm Vào Giỏ
+            </Button>
+
+            <Button
+              icon={<ThunderboltOutlined />}
+              size="large"
+              block
+              className="detail-buy-btn"
+              onClick={handleBuyNow}
+            >
+              Mua Ngay
+            </Button>
+
+            {/* Trust Items */}
+            <Divider style={{ margin: '4px 0' }} />
+            <div className="detail-trust-row">
+              <Space size={4}>
+                <CarOutlined style={{ color: 'var(--text-muted)' }} />
+                <Text type="secondary" style={{ fontSize: '0.78rem' }}>
+                  Miễn phí vận chuyển &gt;500k
+                </Text>
+              </Space>
+              <Space size={4}>
+                <SafetyOutlined style={{ color: 'var(--text-muted)' }} />
+                <Text type="secondary" style={{ fontSize: '0.78rem' }}>
+                  Thanh Toán An Toàn
+                </Text>
+              </Space>
+            </div>
+          </Card>
+
+          {/* Nutrition Accordion */}
+          <Collapse
+            className="detail-nutrition-collapse"
+            defaultActiveKey={['nutrition']}
+            expandIconPosition="end"
+            items={[
+              {
+                key: 'nutrition',
+                label: (
+                  <Text strong style={{ fontSize: '0.95rem' }}>
+                    Thông Tin Dinh Dưỡng
+                  </Text>
+                ),
+                children: (
+                  <div className="nutrition-grid">
+                    {nutritionItems.map(item => (
+                      <div key={item.label} className="nutrition-item">
+                        <Text
+                          type="secondary"
+                          style={{
+                            fontSize: '0.75rem',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {item.label}
+                        </Text>
+                        <Text strong style={{ fontSize: '0.95rem' }}>
+                          {item.value}
+                        </Text>
+                      </div>
+                    ))}
                   </div>
-                  <div className="nutrition-item">
-                    <span className="nutrition-label">Chất Xơ</span>
-                    <span className="nutrition-value">{product.nutritionFacts.dietaryFiber}</span>
-                  </div>
-                  <div className="nutrition-item">
-                    <span className="nutrition-label">Kali</span>
-                    <span className="nutrition-value">{product.nutritionFacts.potassium}</span>
-                  </div>
-                  <div className="nutrition-item">
-                    <span className="nutrition-label">Khẩu Phần</span>
-                    <span className="nutrition-value">{product.nutritionFacts.servingSize}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+                ),
+              },
+            ]}
+          />
         </div>
       </div>
 
-      {/* RELATED */}
+      {/* RELATED PRODUCTS */}
       <section className="detail-related">
         <div className="container">
           <div className="related-header">
-            <h2 className="section-title">Bạn Có Thể Thích</h2>
-            <button className="btn-ghost" onClick={() => onNavigate('products')}>Xem Tất Cả →</button>
+            <Title
+              level={3}
+              style={{
+                fontFamily: "'Playfair Display', serif",
+                color: 'var(--text-primary)',
+                margin: 0,
+              }}
+            >
+              Bạn Có Thể Thích
+            </Title>
+            <Button type="link" onClick={() => onNavigate('products')} className="related-view-all">
+              Xem Tất Cả →
+            </Button>
           </div>
-          <div className="related-grid">
+          <Row gutter={[20, 20]}>
             {related.map(p => (
-              <ProductCard key={p.id} product={p} onNavigate={onNavigate} onAddToCart={onAddToCart} />
+              <Col key={p.id} xs={24} sm={12} md={6}>
+                <ProductCard product={p} onNavigate={onNavigate} onAddToCart={onAddToCart} />
+              </Col>
             ))}
-          </div>
+          </Row>
         </div>
       </section>
     </div>

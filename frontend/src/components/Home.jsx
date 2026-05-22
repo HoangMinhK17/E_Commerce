@@ -1,193 +1,185 @@
 import React, { useState } from 'react';
-import { products, featuredProducts } from '../data/products';
-import { ProductCard, formatPrice } from './Shared';
+import { Button, Row, Col, Typography, Statistic, Space, Input, Card } from 'antd';
+import { ArrowDownOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import { featuredProducts } from '../data/products';
+import { ProductCard } from './Shared';
 import '../style/Home.css';
+
+const { Title, Paragraph, Text } = Typography;
 
 const HomePage = ({ onNavigate, onAddToCart }) => {
   const [email, setEmail] = useState('');
 
   return (
     <div className="home-page page-enter">
-      {/* HERO – full-width image banner */}
+      {/* 1. HERO Section */}
       <section className="hero">
-        {/* Background image */}
         <div className="hero-bg">
           <img
             src="https://images.unsplash.com/photo-1618897996318-5a901fa6ca71?w=1600&q=90"
             alt="Dried fruits and nuts hero"
           />
         </div>
-
-        {/* Dark overlay */}
         <div className="hero-overlay" />
-
-        {/* Text content on top */}
         <div className="hero-content">
           <div className="hero-inner">
-            <span className="hero-badge">🌿 Tự Nhiên &amp; Lành Mạnh</span>
+            <span className="hero-badge">🌿 Tự Nhiên & Lành Mạnh</span>
             <h1 className="hero-title">
-              Hương Vị <span>Nắng Vàng,</span><br />
+              Hương Vị <span style={{ color: '#fbbf24' }}>Nắng Vàng,</span><br />
               Gửi Đến Tận Nhà Bạn!
             </h1>
             <p className="hero-desc">
               Chúng tôi tuyển chọn những trái cây sấy khô ngon nhất và hỗn hợp hạt thủ công,
               được tìm nguồn trực tiếp từ các vườn cây và lò rang quy mô nhỏ.
             </p>
-            <div className="hero-actions">
-              <button className="btn-primary hero-btn-main" onClick={() => onNavigate('products')}>
+            <Space size={16} wrap className="hero-actions">
+              <Button 
+                type="primary" 
+                size="large" 
+                shape="round" 
+                className="hero-btn-main"
+                onClick={() => onNavigate('products')}
+              >
                 Khám Phá Ngay
-              </button>
-              <button className="btn-outline hero-btn-sub" onClick={() => onNavigate('products')}>
+              </Button>
+              <Button 
+                size="large" 
+                shape="round" 
+                ghost 
+                className="hero-btn-sub"
+                onClick={() => onNavigate('products')}
+              >
                 Xem Yêu Thích
-              </button>
-            </div>
+              </Button>
+            </Space>
           </div>
         </div>
-
-        {/* Floating stat cards */}
         <div className="hero-stats">
-          <div className="hero-stat-card">
-            <span className="hero-stat-num">500+</span>
-            <span className="hero-stat-label">Đơn hàng hài lòng</span>
-          </div>
-          <div className="hero-stat-card">
-            <span className="hero-stat-num">100%</span>
-            <span className="hero-stat-label">Hữu cơ tự nhiên</span>
-          </div>
-          <div className="hero-stat-card">
-            <span className="hero-stat-num">50+</span>
-            <span className="hero-stat-label">Sản phẩm đặc sắc</span>
-          </div>
+          <Card className="hero-stat-card glass-card" bordered={false}>
+            <Statistic title="Đơn hàng hài lòng" value={500} suffix="+" valueStyle={{ color: '#fbbf24', fontWeight: 700, fontFamily: "'Playfair Display', serif" }} />
+          </Card>
+          <Card className="hero-stat-card glass-card" bordered={false}>
+            <Statistic title="Hữu cơ tự nhiên" value={100} suffix="%" valueStyle={{ color: '#fbbf24', fontWeight: 700, fontFamily: "'Playfair Display', serif" }} />
+          </Card>
+          <Card className="hero-stat-card glass-card" bordered={false}>
+            <Statistic title="Sản phẩm đặc sắc" value={50} suffix="+" valueStyle={{ color: '#fbbf24', fontWeight: 700, fontFamily: "'Playfair Display', serif" }} />
+          </Card>
         </div>
-
-        {/* Scroll hint */}
         <div className="hero-scroll-hint">
           <span>Cuộn xuống</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 5v14M5 12l7 7 7-7" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+          <ArrowDownOutlined style={{ fontSize: '20px' }} />
         </div>
       </section>
 
-      {/* CATEGORIES */}
+      {/* 2. CATEGORIES Section */}
       <section className="section home-categories">
         <div className="container">
           <div className="section-header">
-            <h2 className="section-title">Khám Phá Danh Mục</h2>
+            <Title level={2} className="section-title" style={{ margin: 0 }}>Khám Phá Danh Mục</Title>
           </div>
-          <div className="cat-grid">
-            <div className="cat-card cat-card-large" onClick={() => onNavigate('products', 'Trái Cây Sấy')}>
-              <img src="https://images.unsplash.com/photo-1622467827417-bbe2237067a9?w=600&q=80" alt="Trái Cây Sấy" />
-              <div className="cat-overlay">
-                <h3>Trái Cây Sấy</h3>
-                <p>Tươi ngon, giữ trọn dưỡng chất</p>
-                <span className="cat-link">Xem ngay →</span>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} md={16}>
+              <div className="cat-card" onClick={() => onNavigate('products', 'Trái Cây Sấy')}>
+                <img src="https://images.unsplash.com/photo-1622467827417-bbe2237067a9?w=600&q=80" alt="Trái Cây Sấy" />
+                <div className="cat-overlay">
+                  <Title level={3} style={{ color: 'white', marginBottom: 4 }}>Trái Cây Sấy</Title>
+                  <Paragraph style={{ color: 'rgba(255,255,255,0.85)', marginBottom: 10 }}>Tươi ngon, giữ trọn dưỡng chất</Paragraph>
+                  <span className="cat-link">Xem ngay <ArrowRightOutlined /></span>
+                </div>
               </div>
-            </div>
-            <div className="cat-card" onClick={() => onNavigate('products', 'Hỗn Hợp Hạt')}>
-              <img src="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&q=80" alt="Hỗn Hợp Hạt" />
-              <div className="cat-overlay">
-                <h3>Hỗn Hợp Hạt</h3>
-                <p>Giàu dinh dưỡng, thơm ngon</p>
-                <span className="cat-link">Xem ngay →</span>
+            </Col>
+            <Col xs={24} md={8}>
+              <div className="cat-card" onClick={() => onNavigate('products', 'Hỗn Hợp Hạt')} style={{ height: '100%' }}>
+                <img src="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&q=80" alt="Hỗn Hợp Hạt" />
+                <div className="cat-overlay">
+                  <Title level={3} style={{ color: 'white', marginBottom: 4 }}>Hỗn Hợp Hạt</Title>
+                  <Paragraph style={{ color: 'rgba(255,255,255,0.85)', marginBottom: 10 }}>Giàu dinh dưỡng, thơm ngon</Paragraph>
+                  <span className="cat-link">Xem ngay <ArrowRightOutlined /></span>
+                </div>
               </div>
-            </div>
-            <div className="cat-card cat-card-dark" onClick={() => onNavigate('products', 'Hạt Rang')}>
-              <img src="https://images.unsplash.com/photo-1567892737950-30c4db37cd89?w=400&q=80" alt="Hạt Rang" />
-              <div className="cat-overlay">
-                <h3>Hạt Rang Thủ Công</h3>
-                <p>Rang mẻ nhỏ, hương vị đậm đà</p>
-                <span className="cat-link">Xem ngay →</span>
+            </Col>
+            <Col xs={24} md={24}>
+              <div className="cat-card" onClick={() => onNavigate('products', 'Hạt Rang')} style={{ height: 280 }}>
+                <img src="https://images.unsplash.com/photo-1567892737950-30c4db37cd89?w=1000&q=80" alt="Hạt Rang" />
+                <div className="cat-overlay">
+                  <Title level={3} style={{ color: 'white', marginBottom: 4 }}>Hạt Rang Thủ Công</Title>
+                  <Paragraph style={{ color: 'rgba(255,255,255,0.85)', marginBottom: 10 }}>Rang mẻ nhỏ, hương vị đậm đà</Paragraph>
+                  <span className="cat-link">Xem ngay <ArrowRightOutlined /></span>
+                </div>
               </div>
-            </div>
-          </div>
+            </Col>
+          </Row>
         </div>
       </section>
 
-      {/* FEATURED */}
+      {/* 3. FEATURED PRODUCTS Section */}
       <section className="section home-featured">
         <div className="container">
-          <div className="section-header">
+          <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 36 }}>
             <div>
-              <span className="section-label">Được Yêu Thích Nhất</span>
-              <h2 className="section-title">Sản Phẩm Nổi Bật</h2>
+              <Text strong style={{ color: 'var(--orange-primary)', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: '0.75rem' }}>Được Yêu Thích Nhất</Text>
+              <Title level={2} style={{ margin: 0 }}>Sản Phẩm Nổi Bật</Title>
             </div>
-            <button className="btn-ghost" onClick={() => onNavigate('products')}>
-              Xem Tất Cả →
-            </button>
+            <Button type="link" onClick={() => onNavigate('products')} style={{ color: 'var(--text-secondary)' }}>
+              Xem Tất Cả <ArrowRightOutlined />
+            </Button>
           </div>
-          <div className="products-grid">
+          <Row gutter={[20, 20]}>
             {featuredProducts.map(p => (
-              <ProductCard key={p.id} product={p} onNavigate={onNavigate} onAddToCart={onAddToCart} />
+              <Col xs={24} sm={12} md={6} key={p.id}>
+                <ProductCard product={p} onNavigate={onNavigate} onAddToCart={onAddToCart} />
+              </Col>
             ))}
-          </div>
+          </Row>
         </div>
       </section>
 
-      {/* TRUST BANNER */}
+      {/* 4. TRUST BANNER Section */}
       <section className="trust-section">
         <div className="container">
-          <div className="trust-inner">
-            <div className="trust-content">
-              <h2 className="trust-title">Minh Bạch Trong Từng Túi Hàng</h2>
-              <p className="trust-desc">
+          <Row gutter={[64, 32]} align="middle">
+            <Col xs={24} md={12}>
+              <Title level={2} style={{ marginBottom: 12 }}>Minh Bạch Trong Từng Túi Hàng</Title>
+              <Paragraph style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', marginBottom: 32 }}>
                 Chúng tôi tin rằng bạn xứng đáng biết thực phẩm của mình đến từ đâu —
                 nên chúng tôi chia sẻ toàn bộ hành trình từ trang trại đến bàn ăn của bạn.
-              </p>
-              <div className="trust-points">
+              </Paragraph>
+              <Space direction="vertical" size={20} style={{ width: '100%' }}>
                 <div className="trust-point">
-                  <span className="trust-icon">🌱</span>
+                  <div className="trust-icon">🌱</div>
                   <div>
-                    <strong>Canh Tác Hữu Cơ</strong>
-                    <p>Chỉ hợp tác với các trang trại sử dụng thực hành nông nghiệp hữu cơ và bền vững</p>
+                    <Text strong style={{ fontSize: '1rem', display: 'block', marginBottom: 4 }}>Canh Tác Hữu Cơ</Text>
+                    <Text type="secondary">Chỉ hợp tác với các trang trại sử dụng thực hành nông nghiệp hữu cơ và bền vững</Text>
                   </div>
                 </div>
                 <div className="trust-point">
-                  <span className="trust-icon">🤝</span>
+                  <div className="trust-icon">🤝</div>
                   <div>
-                    <strong>Thương Mại Công Bằng</strong>
-                    <p>Chúng tôi đảm bảo tính bền vững và công bằng cho người trồng trọc</p>
+                    <Text strong style={{ fontSize: '1rem', display: 'block', marginBottom: 4 }}>Thương Mại Công Bằng</Text>
+                    <Text type="secondary">Chúng tôi đảm bảo tính bền vững và công bằng cho người trồng trọt</Text>
                   </div>
                 </div>
                 <div className="trust-point">
-                  <span className="trust-icon">🚚</span>
+                  <div className="trust-icon">🚚</div>
                   <div>
-                    <strong>Thương Mại Trực Tiếp</strong>
-                    <p>Mua trực tiếp từ nhà sản xuất, giá tốt nhất đến tay bạn</p>
+                    <Text strong style={{ fontSize: '1rem', display: 'block', marginBottom: 4 }}>Thương Mại Trực Tiếp</Text>
+                    <Text type="secondary">Mua trực tiếp từ nhà sản xuất, giá tốt nhất đến tay bạn</Text>
                   </div>
                 </div>
+              </Space>
+            </Col>
+            <Col xs={24} md={12}>
+              <div className="trust-img-wrap">
+                <img
+                  src="https://images.unsplash.com/photo-1586771107445-d3ca888129ff?w=500&q=80"
+                  alt="Farmer holding produce"
+                />
               </div>
-            </div>
-            <div className="trust-img-wrap">
-              <img
-                src="https://images.unsplash.com/photo-1586771107445-d3ca888129ff?w=500&q=80"
-                alt="Farmer holding produce"
-              />
-            </div>
-          </div>
+            </Col>
+          </Row>
         </div>
       </section>
 
-      {/* NEWSLETTER */}
-      <section className="newsletter-section">
-        <div className="container">
-          <div className="newsletter-inner">
-            <h2 className="newsletter-title">Gia Nhập Cộng Đồng Harvest</h2>
-            <p className="newsletter-sub">
-              Nhận công thức theo mùa, cập nhật sản phẩm mới và ưu đãi 5% cho đơn hàng đầu tiên.
-            </p>
-            <div className="newsletter-form">
-              <input
-                type="email"
-                placeholder="Nhập địa chỉ email của bạn"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-              />
-              <button className="btn-primary">Đăng Ký Ngay</button>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   );
 };

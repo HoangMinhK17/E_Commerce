@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { products } from '../data/products';
+import { getProducts } from '../utils/productApi';
 import { ProductCard, formatPrice } from './Shared';
 import {
   Breadcrumb,
@@ -16,6 +16,7 @@ import {
   Typography,
   message,
   Divider,
+  Radio,
 } from 'antd';
 import {
   CheckCircleOutlined,
@@ -32,16 +33,63 @@ const { Title, Paragraph, Text } = Typography;
 const ProductDetailPage = ({ product, onNavigate, onAddToCart }) => {
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
+  const [related, setRelated] = useState([]);
+  const [selectedTypeIndex, setSelectedTypeIndex] = useState(0);
 
-  const related = products.filter(p => p.id !== product.id).slice(0, 4);
+  const currentType = (product.types && product.types.length > selectedTypeIndex) ? product.types[selectedTypeIndex] : null;
+  const displayPrice = currentType ? currentType.salePrice : product.price;
+  const displayOriginalPrice = currentType ? currentType.salePrice * 1.2: product.originalPrice;
+  const stockQuantity = currentType ? currentType.quantity : 999;
+
+  React.useEffect(() => {
+    const fetchRelated = async () => {
+      try {
+        const prods = await getProducts();
+        if (Array.isArray(prods)) {
+          const mappedProds = prods.map(p => ({
+            id: p._id || p.id,
+            name: p.name,
+            image: Array.isArray(p.image) && p.image.length > 0 ? p.image[0] : (p.image || ''),
+            images: Array.isArray(p.image) && p.image.length > 0 ? p.image : [p.image || ''],
+            price: p.type && p.type.length > 0 ? p.type[0].salePrice : (p.price || 0),
+            originalPrice: p.type && p.type.length > 0 ? p.type[0].salePrice * 1.2: null,
+            rating: p.rating || 5,
+            reviewCount: p.reviewCount || 10,
+            category: p.category?.name || p.category || '',
+            badge: p.badge || '',
+            shortDesc: p.description ? p.description.substring(0, 50) + '...' : '',
+            types: p.type || []
+          }));
+          setRelated(mappedProds.filter(p => p.id !== product.id).slice(0, 4));
+        }
+      } catch (error) {
+        console.error("Error fetching related products", error);
+      }
+    };
+    fetchRelated();
+  }, [product.id]);
 
   const handleAddToCart = () => {
-    onAddToCart(product, qty);
+    const cartProduct = {
+      ...product,
+      id: currentType ? `${product.id}-${currentType.size}` : product.id,
+      selectedSize: currentType ? currentType.size : null,
+      price: displayPrice,
+      originalPrice: displayOriginalPrice,
+    };
+    onAddToCart(cartProduct, qty);
     message.success('Đã thêm vào giỏ hàng!');
   };
 
   const handleBuyNow = () => {
-    onAddToCart(product, qty);
+    const cartProduct = {
+      ...product,
+      id: currentType ? `${product.id}-${currentType.size}` : product.id,
+      selectedSize: currentType ? currentType.size : null,
+      price: displayPrice,
+      originalPrice: displayOriginalPrice,
+    };
+    onAddToCart(cartProduct, qty);
     onNavigate('checkout');
   };
 
@@ -54,7 +102,6 @@ const ProductDetailPage = ({ product, onNavigate, onAddToCart }) => {
 
   return (
     <div className="product-detail-page page-enter">
-      {/* BREADCRUMB */}
       <div className="detail-breadcrumb">
         <div className="container">
           <Breadcrumb
@@ -85,9 +132,7 @@ const ProductDetailPage = ({ product, onNavigate, onAddToCart }) => {
         </div>
       </div>
 
-      {/* MAIN PRODUCT SECTION */}
       <div className="container detail-main">
-        {/* LEFT: IMAGE GALLERY */}
         <div className="detail-images">
           <Image.PreviewGroup items={product.images}>
             <div className="detail-img-main">
@@ -115,9 +160,7 @@ const ProductDetailPage = ({ product, onNavigate, onAddToCart }) => {
           </div>
         </div>
 
-        {/* RIGHT: PRODUCT INFO */}
         <div className="detail-info">
-          {/* Badges */}
           <Space size={8} wrap>
             {product.badge && (
               <Tag
@@ -150,7 +193,6 @@ const ProductDetailPage = ({ product, onNavigate, onAddToCart }) => {
             ))}
           </Space>
 
-          {/* Title */}
           <Title
             level={2}
             style={{
@@ -163,17 +205,15 @@ const ProductDetailPage = ({ product, onNavigate, onAddToCart }) => {
             {product.name}
           </Title>
 
-          {/* Price */}
           <div className="detail-price-row">
-            <span className="detail-price">{formatPrice(product.price)}</span>
-            {product.originalPrice && (
+            <span className="detail-price">{formatPrice(displayPrice)}</span>
+            {displayOriginalPrice && (
               <Text delete type="secondary" style={{ fontSize: '1.1rem' }}>
-                {formatPrice(product.originalPrice)}
+                {formatPrice(displayOriginalPrice)}
               </Text>
             )}
           </div>
 
-          {/* Rating */}
           <Space size={10} align="center">
             <Rate
               disabled
@@ -186,7 +226,6 @@ const ProductDetailPage = ({ product, onNavigate, onAddToCart }) => {
             </Text>
           </Space>
 
-          {/* Description */}
           <Paragraph
             style={{
               fontSize: '0.93rem',
@@ -198,7 +237,6 @@ const ProductDetailPage = ({ product, onNavigate, onAddToCart }) => {
             {product.description}
           </Paragraph>
 
-          {/* Features */}
           <ul className="detail-features">
             {product.features.map((f, i) => (
               <li key={i} className="detail-feature">
@@ -210,7 +248,6 @@ const ProductDetailPage = ({ product, onNavigate, onAddToCart }) => {
             ))}
           </ul>
 
-          {/* Purchase Card */}
           <Card
             className="detail-purchase-card"
             styles={{
@@ -222,21 +259,53 @@ const ProductDetailPage = ({ product, onNavigate, onAddToCart }) => {
               },
             }}
           >
-            {/* Quantity */}
+            {product.types && product.types.length > 0 && (
+              <div className="detail-size-wrap">
+                <Text strong style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  Chọn Kích Cỡ / Phân Loại
+                </Text>
+                <div style={{ marginTop: 8 }}>
+                  <Radio.Group 
+                    value={selectedTypeIndex} 
+                    onChange={e => {
+                      setSelectedTypeIndex(e.target.value);
+                      setQty(1);
+                    }}
+                  >
+                    <Space wrap>
+                      {product.types.map((type, idx) => (
+                        <Radio.Button 
+                          key={idx} 
+                          value={idx}
+                          disabled={type.quantity <= 0}
+                        >
+                          {type.size}
+                        </Radio.Button>
+                      ))}
+                    </Space>
+                  </Radio.Group>
+                  <div style={{ marginTop: 8, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    Còn lại: <Text strong>{stockQuantity}</Text> sản phẩm
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="detail-qty-wrap">
               <Text strong style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                 Chọn Số Lượng
               </Text>
               <InputNumber
                 min={1}
+                max={stockQuantity > 0 ? stockQuantity : 1}
                 value={qty}
                 onChange={val => setQty(val || 1)}
                 style={{ width: 100 }}
                 size="middle"
+                disabled={stockQuantity <= 0}
               />
             </div>
 
-            {/* Action Buttons */}
             <Button
               type="primary"
               icon={<ShoppingCartOutlined />}
@@ -244,6 +313,7 @@ const ProductDetailPage = ({ product, onNavigate, onAddToCart }) => {
               block
               className="detail-add-btn"
               onClick={handleAddToCart}
+              disabled={stockQuantity <= 0}
             >
               Thêm Vào Giỏ
             </Button>
@@ -254,11 +324,11 @@ const ProductDetailPage = ({ product, onNavigate, onAddToCart }) => {
               block
               className="detail-buy-btn"
               onClick={handleBuyNow}
+              disabled={stockQuantity <= 0}
             >
               Mua Ngay
             </Button>
 
-            {/* Trust Items */}
             <Divider style={{ margin: '4px 0' }} />
             <div className="detail-trust-row">
               <Space size={4}>
@@ -276,7 +346,6 @@ const ProductDetailPage = ({ product, onNavigate, onAddToCart }) => {
             </div>
           </Card>
 
-          {/* Nutrition Accordion */}
           <Collapse
             className="detail-nutrition-collapse"
             defaultActiveKey={['nutrition']}
@@ -317,7 +386,6 @@ const ProductDetailPage = ({ product, onNavigate, onAddToCart }) => {
         </div>
       </div>
 
-      {/* RELATED PRODUCTS */}
       <section className="detail-related">
         <div className="container">
           <div className="related-header">

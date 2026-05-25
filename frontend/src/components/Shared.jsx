@@ -18,7 +18,6 @@ import {
 export const formatPrice = (price) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
-/* ====== NAVBAR ====== */
 export const Navbar = ({ currentPage, onNavigate, cartCount }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -128,7 +127,6 @@ export const Navbar = ({ currentPage, onNavigate, cartCount }) => {
   );
 };
 
-/* ====== FOOTER ====== */
 export const Footer = () => (
   <footer className="site-footer">
     <div className="footer-inner">
@@ -219,7 +217,6 @@ export const Footer = () => (
   </footer>
 );
 
-/* ====== PRODUCT CARD ====== */
 export const ProductCard = ({ product, onNavigate, onAddToCart }) => (
   <Card
     className="product-card"

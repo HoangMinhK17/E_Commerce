@@ -4,14 +4,13 @@ import {
   Empty, Button, Row, Col, Typography, Divider, Space,
 } from 'antd';
 import { FilterOutlined, DeleteOutlined } from '@ant-design/icons';
-import { products } from '../data/products';
+import { getCategoryProducts } from '../utils/categoryProduct';
+import { getProducts } from '../utils/productApi';
 import { ProductCard, formatPrice } from './Shared';
 import '../style/Products.css';
 
 const { Title, Paragraph, Text } = Typography;
 const { CheckableTag } = Tag;
-
-const CATEGORIES = ['Tất Cả Sản Phẩm', 'Trái Cây Sấy', 'Hỗn Hợp Hạt', 'Hạt Rang'];
 const DIET_TAGS = ['Hữu Cơ', 'Thuần Chay', 'Không Đường'];
 const PAGE_SIZE = 9;
 
@@ -23,12 +22,54 @@ const SORT_OPTIONS = [
 ];
 
 const ProductsPage = ({ onNavigate, onAddToCart, initialCategory }) => {
+  const [productsList, setProductsList] = useState([]);
+  const [categoriesList, setCategoriesList] = useState(['Tất Cả Sản Phẩm']);
   const [selectedCategory, setSelectedCategory] = useState(initialCategory || 'Tất Cả Sản Phẩm');
   const [priceMax, setPriceMax] = useState(300000);
   const [minRating, setMinRating] = useState(0);
   const [selectedTags, setSelectedTags] = useState([]);
   const [sortBy, setSortBy] = useState('featured');
   const [currentPage, setCurrentPage] = useState(1);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [cats, prods] = await Promise.all([
+          getCategoryProducts(),
+          getProducts()
+        ]);
+        
+        if (Array.isArray(cats)) {
+          setCategoriesList(['Tất Cả Sản Phẩm', ...cats.map(c => c.name)]);
+        }
+        
+        if (Array.isArray(prods)) {
+          const mappedProds = prods.map(p => ({
+            id: p._id || p.id,
+            name: p.name,
+            image: Array.isArray(p.image) && p.image.length > 0 ? p.image[0] : (p.image || ''),
+            images: Array.isArray(p.image) && p.image.length > 0 ? p.image : [p.image || ''],
+            price: p.type && p.type.length > 0 ? p.type[0].salePrice : (p.price || 0),
+            originalPrice: p.type && p.type.length > 0 ? p.type[0].salePrice * 1.2: null,
+            rating: p.rating || 5,
+            reviewCount: p.reviewCount || 10,
+            category: p.category?.name || p.category || '',
+            badge: p.badge || '',
+            tags: p.tags || [],
+            description: p.description || '',
+            shortDesc: p.description ? p.description.substring(0, 50) + '...' : '',
+            features: p.features || ['Thơm ngon', 'Bổ dưỡng'],
+            nutritionFacts: p.nutritionFacts || { calories: 100, dietaryFiber: '2g', potassium: '10mg', servingSize: '30g' },
+            types: p.type || []
+          }));
+          setProductsList(mappedProds);
+        }
+      } catch (error) {
+        console.error("Error fetching data", error);
+      }
+    };
+    fetchData();
+  }, []);
 
   const toggleTag = (tag, checked) => {
     setSelectedTags(prev =>
@@ -47,7 +88,7 @@ const ProductsPage = ({ onNavigate, onAddToCart, initialCategory }) => {
   };
 
   const filtered = useMemo(() => {
-    let list = [...products];
+    let list = [...productsList];
     if (selectedCategory !== 'Tất Cả Sản Phẩm') {
       list = list.filter(p => p.category === selectedCategory);
     }
@@ -69,7 +110,6 @@ const ProductsPage = ({ onNavigate, onAddToCart, initialCategory }) => {
 
   return (
     <div className="products-page page-enter">
-      {/* ========== HERO BANNER ========== */}
       <section className="products-hero">
         <div className="container">
           <Title
@@ -99,15 +139,12 @@ const ProductsPage = ({ onNavigate, onAddToCart, initialCategory }) => {
         </div>
       </section>
 
-      {/* ========== LAYOUT ========== */}
       <div className="container products-layout">
-        {/* ---- SIDEBAR ---- */}
         <aside className="products-sidebar">
           <Card
             className="sidebar-card"
             styles={{ body: { padding: 24 } }}
           >
-            {/* Category Filter */}
             <div className="sidebar-section">
               <Text className="sidebar-label" strong>
                 <FilterOutlined style={{ marginRight: 6 }} />
@@ -122,7 +159,7 @@ const ProductsPage = ({ onNavigate, onAddToCart, initialCategory }) => {
                 className="sidebar-radio-group"
               >
                 <Space direction="vertical" size={4} style={{ width: '100%' }}>
-                  {CATEGORIES.map(cat => (
+                  {categoriesList.map(cat => (
                     <Radio key={cat} value={cat} className="sidebar-radio-item">
                       {cat}
                     </Radio>
@@ -133,7 +170,6 @@ const ProductsPage = ({ onNavigate, onAddToCart, initialCategory }) => {
 
             <Divider className="sidebar-divider" />
 
-            {/* Price Filter */}
             <div className="sidebar-section">
               <Text className="sidebar-label" strong>Khoảng Giá</Text>
               <Slider
@@ -160,7 +196,6 @@ const ProductsPage = ({ onNavigate, onAddToCart, initialCategory }) => {
 
             <Divider className="sidebar-divider" />
 
-            {/* Rating Filter */}
             <div className="sidebar-section">
               <Text className="sidebar-label" strong>Đánh Giá</Text>
               <Radio.Group
@@ -193,7 +228,6 @@ const ProductsPage = ({ onNavigate, onAddToCart, initialCategory }) => {
 
             <Divider className="sidebar-divider" />
 
-            {/* Diet Tags Filter */}
             <div className="sidebar-section sidebar-section-last">
               <Text className="sidebar-label" strong>Chế Độ Ăn</Text>
               <div className="tag-filters">
@@ -212,7 +246,6 @@ const ProductsPage = ({ onNavigate, onAddToCart, initialCategory }) => {
           </Card>
         </aside>
 
-        {/* ---- MAIN CONTENT ---- */}
         <main className="products-main">
           {/* Toolbar */}
           <div className="products-toolbar">
@@ -229,7 +262,6 @@ const ProductsPage = ({ onNavigate, onAddToCart, initialCategory }) => {
             />
           </div>
 
-          {/* Product Grid or Empty State */}
           {filtered.length === 0 ? (
             <div className="products-empty-wrap">
               <Empty
@@ -264,7 +296,6 @@ const ProductsPage = ({ onNavigate, onAddToCart, initialCategory }) => {
                 ))}
               </Row>
 
-              {/* Pagination */}
               {filtered.length > PAGE_SIZE && (
                 <div className="products-pagination">
                   <Pagination

@@ -18,7 +18,10 @@ export class ProductsService {
   }
 
   findAll() {
-    return this.productModel.find({isDeleted: false, isStatus: 'active'}).exec();
+    return this.productModel
+    .find({isDeleted: false, isStatus: 'active'})
+    .populate('category', 'name')
+    .exec();
   }
 
   findOne(id: string) {
@@ -33,5 +36,11 @@ export class ProductsService {
 
   remove(id: string) {
     return this.productModel.findByIdAndDelete(id).exec();
+  }
+
+  findByCategory(category: string) {
+    return this.productModel
+      .find({  category: category, isDeleted: false, isStatus: 'active' })
+      .exec();
   }
 }
